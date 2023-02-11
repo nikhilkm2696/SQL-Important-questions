@@ -166,3 +166,56 @@ my-solution:::::::::
 SELECT page_id from pages
 where page_id not in (select distinct(page_id) from page_likes)
 order by page_id ASC
+
+
+
+
+3)Tesla is investigating bottlenecks in their production, and they need your help to extract the relevant data. Write a query that determines which parts have begun the assembly process but are not yet finished.
+
+Assumptions
+
+Table parts_assembly contains all parts in production.
+A part with no finish_date is an unfinished part.
+parts_assembly Table
+Column Name	Type
+part	string
+finish_date	datetime
+assembly_step	integer
+parts_assembly Example Input
+part	finish_date	assembly_step
+battery	01/22/2022 00:00:00	1
+battery	02/22/2022 00:00:00	2
+battery	03/22/2022 00:00:00	3
+bumper	01/22/2022 00:00:00	1
+bumper	02/22/2022 00:00:00	2
+bumper		3
+bumper		4
+Example Output
+part
+bumper
+Explanation
+The only item in the output is "bumper" because step 3 didn't have a finish date.
+
+The dataset you are querying against may have different input & output - this is just an example!
+
+
+
+Solution
+The parts table already contains all of the parts that are currently in production, meaning that we do not have to do any additional filtering for the parts that are not in production.
+
+All we need to do is extract the parts that are not yet finished. We can accomplish this by filtering for rows with no data present in the finish_date column. We call these missing values NULL.
+
+Some parts might be represented multiple times in the query data because they have several assembly steps that are not yet complete. To solve this, we can group part or apply DISTINCT function to obtain the unique parts.
+
+SELECT part
+FROM parts_assembly
+WHERE finish_date IS NULL
+GROUP BY part;
+OR
+
+SELECT DISTINCT part
+FROM parts_assembly
+WHERE finish_date IS NULL;
+
+
+mysolution:SELECT DISTINCT(part) FROM parts_assembly where finish_date is NULL;
