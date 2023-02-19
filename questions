@@ -1188,3 +1188,86 @@ group by card_name
 order by difference desc;
 
 
+14)Easy
+
+Alibaba
+You are trying to find the mean number of items bought per order on Alibaba, rounded to 1 decimal place.
+
+However, instead of doing analytics on all Alibaba orders, you have access to a summary table, which describes how many items were in an order (item_count), and the number of orders that had that many items (order_occurrences).
+
+items_per_order Table:
+Column Name	Type
+item_count	integer
+order_occurrences	integer
+items_per_order Example Input:
+item_count	order_occurrences
+1	500
+2	1000
+3	800
+4	1000
+There are 500 orders with 1 item in each order; 1000 orders with 2 items in each order; 800 orders with 3 items in each order.
+
+Example Output:
+mean
+2.7
+Explanation
+Let's calculate the arithmetic average:
+
+Total items = (1*500) + (2*1000) + (3*800) + (4*1000) = 8900
+
+Total orders = 500 + 1000 + 800 + 1000 = 3300
+
+Mean = 8900 / 3300 = 2.7
+
+The dataset you are querying against may have different input & output - this is just an example!
+
+Hint #1
+
+Can you take the logic from the Example Output, and turn it into a SQL query?
+
+Mean of item count = Total item count / Total orders
+
+Complete the blank spaces in the following query with the appropriate fields.
+
+SELECT 
+  SUM(_____ * _____)/SUM(_____) AS mean
+FROM items_per_order;
+
+
+Solution
+Here’s the steps to the solution:
+
+Calculate the weighted average of items per order.
+Round the result to 1 decimal.
+Step 1
+Let's follow the logic in the example output. First, we need to multiply each item_count with the number of occurrences order_occurrences, calculate the sum using SUM(item_count * order_occurrences), and finally divide with the total number of orders using SUM(order_occurrences).
+
+SELECT 
+  SUM(item_count*order_occurrences)/SUM(order_occurrences) AS mean
+FROM items_per_order;
+However, there is a trick we need to account for. By default, both metrics are of integer type (i.e. 3, 5, 6), meaning that division will return an integer. Remember that the question specifically asks for output rounded to 1 decimal place.
+
+To tackle this, it is then necessary to cast either column as a decimal type (i.e. 3.1, 5.2, 6.7). This can be done by simply passing a ::DECIMAL or applying CAST(field AS decimal) on either column.
+
+SELECT 
+  SUM(item_count::DECIMAL*order_occurrences)/SUM(order_occurrences) AS mean
+FROM items_per_order;
+Step 2
+Use ROUND(__,1) to round the result to 1 decimal place.
+
+SELECT 
+  ROUND(
+    SUM(item_count::DECIMAL*order_occurrences)/SUM(order_occurrences)
+    ,1) AS mean
+FROM items_per_order;
+
+
+mysolution:
+
+
+
+select round(me,1) as mean from
+(select sum(item_count::decimal*order_occurrences)/sum(order_occurrences) as me
+from items_per_order) as t;
+
+
