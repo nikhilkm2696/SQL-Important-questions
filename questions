@@ -1270,4 +1270,133 @@ select round(me,1) as mean from
 (select sum(item_count::decimal*order_occurrences)/sum(order_occurrences) as me
 from items_per_order) as t;
 
+15)
+Easy
+
+CVS Health
+CVS Health is trying to better understand its pharmacy sales, and how well different products are selling. Each drug can only be produced by one manufacturer.
+
+Write a query to find out which manufacturer is associated with the drugs that were not profitable and how much money CVS lost on these drugs. 
+
+Output the manufacturer, number of drugs and total losses. Total losses should be in absolute value. Display the results with the highest losses on top.
+
+If you like this question, try out Pharmacy Analytics (Part 3)!
+
+pharmacy_sales Table:
+Column Name	Type
+product_id	integer
+units_sold	integer
+total_sales	decimal
+cogs	decimal
+manufacturer	varchar
+drug	varchar
+pharmacy_sales Example Input:
+product_id	units_sold	total_sales	cogs	manufacturer	drug
+156	89514	3130097.00	3427421.73	Biogen	Acyclovir
+25	222331	2753546.00	2974975.36	AbbVie	Lamivudine and Zidovudine
+50	90484	2521023.73	2742445.90	Eli Lilly	Dermasorb TA Complete Kit
+98	110746	813188.82	140422.87	Biogen	Medi-Chord
+Example Output:
+manufacturer	drug_count	total_loss
+Biogen	1	297324.73
+AbbVie	1	221429.36
+Eli Lilly	1	221422.17
+Explanation:
+The drugs in the first 3 rows of the Example Input table reported losses. Biogen's losses were the highest followed by AbbVie's and Eli Lilly's.
+
+Medi-Chord drug by Biogen reported a profit, so it was excluded from the result.
+
+The dataset you are querying against may have different input & output - this is just an example!
+
+
+Solution
+Here's a multi-step approach to solving the question:
+
+Find the total profit or loss for each manufacturer.
+Keep rows where drugs are making losses.
+Obtain the number of unprofitable drugs and total losses for each manufacturer.
+Convert the total losses to absolute value and order output accordingly.
+Step 1: Find the total profit or loss for each manufacturer
+Before we start, we have to define how the total profit or loss is calculated.
+
+Total Profit/(Total Loss) = Total Sales - Total Cost of Goods Sold
+
+A positive value indicates profit, whereas a negative value indicates a loss.
+
+Here's how the query looks after incorporating the formula.
+
+SELECT
+  manufacturer,
+  drug,
+  total_sales - cogs AS net_value
+FROM pharmacy_sales;
+Showing the outcomes for 4 randomly selected drugs.
+
+manufacturer	drug	net_value
+Biogen	Acyclovir	-297324.73
+AbbVie	Lamivudine and Zidovudine	-221429.36
+Eli Lilly	Dermasorb TA Complete Kit	-221422.17
+Biogen	Medi-Chord	672765.95
+Negative values in the net_value column indicate losses. Medi-Chord is making a profit so this drug should be removed.
+
+Step 2: Keep rows where drugs are making losses
+To filter for unprofitable drugs only, we will keep rows where the total_sales - cogs is equal to or less than 0 in the WHERE clause.
+
+SELECT
+  manufacturer,
+  drug,
+  total_sales - cogs AS net_value
+FROM pharmacy_sales
+WHERE total_sales - cogs <= 0;
+Step 3: Obtain count of unprofitable drugs and total losses for each manufacturer
+Next, we obtain the number of drugs associated with each manufacturer using the COUNT() function and the total losses suffered by CVS Health using the SUM() function.
+
+SELECT
+  manufacturer,
+  COUNT(drug) AS drug_count,
+  SUM(total_sales - cogs) AS total_loss
+FROM pharmacy_sales
+WHERE total_sales - cogs <= 0
+GROUP BY manufacturer;
+Step 4: Convert total loss to absolute value and order output
+To return the total_loss in absolute value (it means to remove the negative symbol -), we can use the ABS() function on SUM(net_value) .
+
+Finally, order the results based on the highest losses followed by the least losses.
+
+Solution #1: Using ABS() -- Explained above
+
+SELECT
+  manufacturer,
+  COUNT(drug) AS drug_count,
+  ABS(SUM(total_sales - cogs)) AS total_loss
+FROM pharmacy_sales
+WHERE total_sales - cogs <= 0
+GROUP BY manufacturer
+ORDER BY total_loss DESC;
+Solution #2: Without ABS()
+
+By simply switching the cogs and total_sales positions in SUM(), we can easily calculate the total losses in absolute value with no negative sign and do not need to use the ABS() function.
+
+Additionally, in the WHERE clause, filtering for rows where cogs > total_sales means we are only keeping rows where the cost is more than the sales, indicating losses as well.
+
+SELECT
+  manufacturer,
+  COUNT(drug) AS drug_count, 
+  SUM(cogs - total_sales) AS total_loss
+FROM pharmacy_sales
+WHERE cogs > total_sales
+GROUP BY manufacturer
+ORDER BY total_loss DESC;
+
+
+
+
+MYSOLUTION:
+select manufacturer,count(manufacturer), ABS(SUM(total_loss)) as total_loss FROM 
+(SELECT manufacturer,(total_sales-cogs) as total_loss FROM pharmacy_sales
+order by total_loss) as p
+where total_loss<0
+group by manufacturer
+ORDER BY total_loss DESC ;
+
 
